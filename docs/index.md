@@ -8,18 +8,29 @@ by
 [Christian Pölitz](http://www.dmir.uni-wuerzburg.de/staff/christian_poelitz) and
 [Andreas Hotho](http://www.dmir.uni-wuerzburg.de/staff/hotho).
 
+## Overview
+In our work, we learned a semantic relatedness measure from human feedback, using a metric learning approach.
+Human Intuition Datasets contain direct human judgments about the relatedness of words, i.e. human feedback.
+We exploit these datasets to then learn a parameterization of the cosine measure, while resorting to
+a metric learning approach, which is based on relative distance comparisons. We validate our approach on four
+different embedding datasets, which we make public or provide a download a link here.
+
+Furthermore and to the best of our knowledge, we were the first to explore the possibility of learning
+word embeddings from tagging data.
+
 ## Reference Implementations
 ### LSML
 For LSML, we used a modified implementation from the one in the [metric_learn](https://github.com/all-umass/metric-learn) package.
-It can be found in src/metric_learn/lsml.py
+It can be found under [src/metric_learn/lsml.py](https://github.com/thomasniebler/semantics-metriclearning/blob/master/src/metric_learn/lsml.py)
+in our repository.
 
 We added a diminishing factor to the matrix regularization term, as Euclidean distances on a unit sphere tend to become
 rather small in comparison to the trace of a 100x100 matrix. The initial matrix M_0 was chosen as the Identity matrix,
 since we want to modify the cosine measure.
 
 ### GloVe
-We used the [published code of GloVe](https://nlp.stanford.edu/projects/glove/) to create the tag embeddings.
-We used the predefined values of alpha=0.75 and x_max=100.
+We used the [published code of GloVe](https://nlp.stanford.edu/projects/glove/) to create the tag embeddings of
+dimension 100. We used the predefined values of alpha=0.75 and x_max=100.
 
 ## Vector Embeddings
 These are the datasets that we used for our experiments.
@@ -48,3 +59,5 @@ or from the corresponding original locations.
 * [WordSimilarity-353](http://www.cs.technion.ac.il/~gabr/resources/data/wordsim353/wordsim353.html)
 * [MEN collection](https://staff.fnwi.uva.nl/e.bruni/MEN)
 * [Bib100](http://dmir.org/datasets/bib100/)
+
+
