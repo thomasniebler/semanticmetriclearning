@@ -26,25 +26,25 @@ These are the datasets that we used for our experiments.
 
 ### Delicious
 The Delicious tagging dataset is [publicly available](http://www.zubiaga.org/datasets/socialbm0311).
-The generated word embeddings can be retrieved from [PUT THAT IN] 
+The generated word embeddings are published in this repository. 
 
 ### BibSonomy
 The BibSonomy tagging data can be retrieved from [the BibSonomy homepage](https://www.kde.cs.uni-kassel.de/bibsonomy/dumps/).
-We also provide the generated word embeddings as a public download at [PUT THAT IN] 
+We also provide the generated word embeddings as a public download in this repository. 
 
 ### WikiGlove
 Pennington et al. made some of their vector collections [publicly available](https://nlp.stanford.edu/projects/glove/).
 Specifically, we used to GloVe6B corpus, which is generated from a Wikipedia dump from 2014 and the Gigaword5 corpus.
 
 ### WikiNav
-The WikiNav vectors are publicly available at [https://meta.wikimedia.org/wiki/Research:Wikipedia_Navigation_Vectors].
-Specifically, we used the 100-dimensional vectors from [https://figshare.com/articles/Wikipedia_Vectors/3146878], created
+The WikiNav vectors are publicly available at [Wikimedia Research](https://meta.wikimedia.org/wiki/Research:Wikipedia_Navigation_Vectors).
+Specifically, we used the 100-dimensional vectors from [FigShare](https://figshare.com/articles/Wikipedia_Vectors/3146878), created
 with data ranging from 01-01-2017 till 31-01-2017.
 
 ## Human Intuition Datasets
 The Human Intuition Datasets (HIDs) can be retrieved as preprocessed pandas-friendly csv files 
-from [http://www.thomas-niebler.de/dataset-collection-for-evaluating-semantic-relatedness/]
+[here](http://www.thomas-niebler.de/dataset-collection-for-evaluating-semantic-relatedness/)
 or from the corresponding original locations.
 * [WordSimilarity-353](http://www.cs.technion.ac.il/~gabr/resources/data/wordsim353/wordsim353.html)
 * [MEN collection](https://staff.fnwi.uva.nl/e.bruni/MEN)
-* [Bib100](http://dmir.org/datasets/) (TODO: WE MUST ADD A DESCRIPTION HERE)
+* [Bib100](http://dmir.org/datasets/bib100/)
