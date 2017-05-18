@@ -1,21 +1,27 @@
 # Learning Semantic Relatedness from Human Feedback Using Metric Learning
 
 This page contains all the necessary information to reproduce the results given in the ISWC'17 submission
-"Learning Semantic Relatedness from Human Feedback Using Metric Learning" (LINK TO ARXIV) by Thomas Niebler, Martin Becker,
-Christian Pölitz and Andreas Hotho.
+"Learning Semantic Relatedness from Human Feedback Using Metric Learning" (link to arxiv coming soon)
+by
+[Thomas Niebler](http://www.dmir.uni-wuerzburg.de/staff/niebler),
+[Martin Becker](http://www.dmir.uni-wuerzburg.de/staff/martinbecker),
+[Christian Pölitz](http://www.dmir.uni-wuerzburg.de/staff/christian_poelitz) and
+[Andreas Hotho](http://www.dmir.uni-wuerzburg.de/staff/hotho).
 
 ## Reference Implementations
 ### LSML
 For LSML, we used a modified implementation from the one in the [metric_learn](https://github.com/all-umass/metric-learn) package.
-The modification is present in our repository and boils down to adding a diminishing factor to the matrix regularization
-term, as differences on a unit sphere tend to become rather small in comparison to the trace of a 100x100 matrix.
-The initial matrix M_0 was chosen as the Identity matrix, since we want to modify the cosine measure.
+It can be found in src/metric_learn/lsml.py
+
+We added a diminishing factor to the matrix regularization term, as Euclidean distances on a unit sphere tend to become
+rather small in comparison to the trace of a 100x100 matrix. The initial matrix M_0 was chosen as the Identity matrix,
+since we want to modify the cosine measure.
 
 ### GloVe
 We used the [published code of GloVe](https://nlp.stanford.edu/projects/glove/) to create the tag embeddings.
 We used the predefined values of alpha=0.75 and x_max=100.
 
-## Datasets
+## Vector Embeddings
 These are the datasets that we used for our experiments.
 
 ### Delicious
@@ -34,3 +40,11 @@ Specifically, we used to GloVe6B corpus, which is generated from a Wikipedia dum
 The WikiNav vectors are publicly available at [https://meta.wikimedia.org/wiki/Research:Wikipedia_Navigation_Vectors].
 Specifically, we used the 100-dimensional vectors from [https://figshare.com/articles/Wikipedia_Vectors/3146878], created
 with data ranging from 01-01-2017 till 31-01-2017.
+
+## Human Intuition Datasets
+The Human Intuition Datasets (HIDs) can be retrieved as preprocessed pandas-friendly csv files 
+from [http://www.thomas-niebler.de/dataset-collection-for-evaluating-semantic-relatedness/]
+or from the corresponding original locations.
+* [WordSimilarity-353](http://www.cs.technion.ac.il/~gabr/resources/data/wordsim353/wordsim353.html)
+* [MEN collection](https://staff.fnwi.uva.nl/e.bruni/MEN)
+* [Bib100](http://dmir.org/datasets/) (TODO: WE MUST ADD A DESCRIPTION HERE)

@@ -1,3 +1,5 @@
+import urllib
+
 import numpy as np
 import pandas
 
@@ -45,12 +47,17 @@ def prepare_dataset(evaldf, vecs):
     return result.reset_index(drop=True)
 
 
-def load_line_vecs(path):
+def load_vecs(path):
     file = open(path)
     vecs = {parts[0].lower(): np.array([float(k) for k in parts[1:]])
             for parts in [line.strip().split(" ") for line in file] if len(parts) > 2}
     vecs = {k: v / np.linalg.norm(v) for k, v in vecs.items()}
     return vecs
+
+
+def load_eval_df(name="ws353"):
+    return pandas.read_csv(urllib.request.urlopen("http://www.thomas-niebler.de/evaldf/" + name + ".csv"), sep="\t",
+                           header=0)
 
 
 def eval(test_eval_df, metric=None):
