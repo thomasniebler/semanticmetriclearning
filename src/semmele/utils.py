@@ -61,10 +61,8 @@ def load_eval_df(name="ws353"):
 
 
 def eval(test_eval_df, metric=None):
-    # this is the cosine *distance*
     results = [round(cosA(row[0], row[1]), 3) for row in test_eval_df[["vecA", "vecB"]].values]
     test_eval_df["cos"] = results
-    # here we need the cosine *similarity*
     results_metric = [round(cosA(row[0], row[1], metric), 3) for row in test_eval_df[["vecA", "vecB"]].values]
     test_eval_df["met"] = results_metric
     return [test_eval_df["cos"].corr(test_eval_df["relatedness"], method="spearman"),
