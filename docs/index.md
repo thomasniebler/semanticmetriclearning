@@ -1,7 +1,7 @@
 # Learning Semantic Relatedness from Human Feedback Using Metric Learning
 
 This page contains all the necessary information to reproduce the results given in the ISWC'17 submission
-"Learning Semantic Relatedness from Human Feedback Using Metric Learning" (link to arxiv coming soon)
+["Learning Semantic Relatedness from Human Feedback Using Metric Learning"](https://arxiv.org/abs/1705.07425)
 by
 [Thomas Niebler](http://www.dmir.uni-wuerzburg.de/staff/niebler),
 [Martin Becker](http://www.dmir.uni-wuerzburg.de/staff/martinbecker),
