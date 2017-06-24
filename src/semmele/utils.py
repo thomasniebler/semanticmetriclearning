@@ -1,4 +1,7 @@
-import urllib
+try:
+    import urllib2
+except Exception:
+    import urllib.request as urllib2
 
 import numpy as np
 import pandas
@@ -56,7 +59,7 @@ def load_vecs(path):
 
 
 def load_eval_df(name="ws353"):
-    return pandas.read_csv(urllib.request.urlopen("http://www.thomas-niebler.de/evaldf/" + name + ".csv"), sep="\t",
+    return pandas.read_csv(urllib2.urlopen("http://www.thomas-niebler.de/evaldf/" + name + ".csv"), sep="\t",
                            header=0)
 
 
@@ -67,3 +70,4 @@ def eval(test_eval_df, metric=None):
     test_eval_df["met"] = results_metric
     return [test_eval_df["cos"].corr(test_eval_df["relatedness"], method="spearman"),
             test_eval_df["met"].corr(test_eval_df["relatedness"], method="spearman")]
+

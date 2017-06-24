@@ -19,6 +19,19 @@ Furthermore and to the best of our knowledge, we were the first to explore the p
 word embeddings from tagging data.
 
 ## Reference Implementations
+### Tag Co-Occurrence Graph
+To calculate the tag cooccurrence graph as input for the GloVe algorithm, we applied
+the method presented in ["Semantic Grounding of Tag Relatedness in Social Bookmarking Systems"](https://www.bibsonomy.org/bibtex/23d13a333db2d59968b6afda906006286/thoni)
+by Cattuto et al.. More specifically, we used the co-occurrence based on posts as described in
+Equation (1) in the linked paper:
+<a href="https://www.codecogs.com/eqnedit.php?latex=coocc(t_1,&space;t_2)&space;:=&space;card\left((u,&space;r)&space;\in&space;U&space;\times&space;R&space;|&space;t_1,&space;t_2&space;\in&space;T_{ur}&space;\right)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?coocc(t_1,&space;t_2)&space;:=&space;card\left((u,&space;r)&space;\in&space;U&space;\times&space;R&space;|&space;t_1,&space;t_2&space;\in&space;T_{ur}&space;\right)" title="coocc(t_1, t_2) := card\left((u, r) \in U \times R | t_1, t_2 \in T_{ur} \right)" /></a>
+Here, <a href="https://www.codecogs.com/eqnedit.php?latex=T_{ur}&space;:=&space;\left\{&space;t&space;\in&space;T&space;|&space;(u,t,r)&space;\in&space;Y&space;\right\}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?T_{ur}&space;:=&space;\left\{&space;t&space;\in&space;T&space;|&space;(u,t,r)&space;\in&space;Y&space;\right\}" title="T_{ur} := \left\{ t \in T | (u,t,r) \in Y \right\}" /></a>, i.e. all tags t, which hav been assigned
+to resource r by user u.
+
+In [src/embeddings/example_call.py](https://github.com/thomasniebler/semantics-metriclearning/blob/master/src/embeddings/example_call.py), we provided an example
+on how to call the corresponding methods to construct the co-occurrence graph. It then needs to be saved to a file, before
+the GloVe algorithm can be called on that file.
+
 ### LSML
 For LSML, we used a modified implementation from the one in the [metric_learn](https://github.com/all-umass/metric-learn) package.
 It can be found under [src/metric_learn/lsml.py](https://github.com/thomasniebler/semantics-metriclearning/blob/master/src/metric_learn/lsml.py)
