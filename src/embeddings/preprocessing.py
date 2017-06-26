@@ -1,5 +1,7 @@
 import itertools
 
+from scipy.sparse import coo_matrix
+
 
 def can_be_printed(term):
     try:
@@ -7,6 +9,19 @@ def can_be_printed(term):
         return True
     except UnicodeEncodeError:
         return False
+
+
+def group_to_sparse_vector(grp, max_id, binary=False):
+    key = grp[0]
+    if binary:
+        data = [1 for k in grp[1]]
+    else:
+        data = [k[1] for k in grp[1]]
+    cols = [k[0] for k in grp[1]]
+    rows = [0] * len(grp[1])
+    vector = coo_matrix((data, (rows, cols)), shape=(1, max_id)).tocsc()
+    return key, vector
+
 
 
 def filter_by_count(tas_rdd, entity="tag", minfrequency=1, top=0):
@@ -67,4 +82,12 @@ def tas_to_edgelist(sc, tas_rdd, min_tag=1, min_user=1, min_resource=1, top_tag=
                                                 grouping_function=lambda tas: (tas["user"], tas["res"]))
     return cooccs_with_counts \
         .map(lambda (kv, count): kv + (count,)) \
-        .map(lambda (k, v, count): (reverse_voc_map_bc.value[k], reverse_voc_map_bc.value[v], count))
+               .map(
+        lambda (k, v, count): (reverse_voc_map_bc.value[k], reverse_voc_map_bc.value[v], count)), vocabulary_map_bc
+
+
+def edgelist_to_vec(edgelist, vocabulary_map_bc):
+    transformed_edgelist = edgelist.map(lambda line: (line[0], (vocabulary_map_bc.value[line[1]], line[2])))
+    return transformed_edgelist \
+        .groupByKey() \
+        .map(lambda line: (group_to_sparse_vector(line, len(vocabulary_map_bc.value))))
