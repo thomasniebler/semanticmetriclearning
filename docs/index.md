@@ -74,7 +74,7 @@ or from the corresponding original locations.
 * [Bib100](http://dmir.org/datasets/bib100/)
 
 
-## Appendix
+## Appendix for ISWC reviews
 As an additional experiment, we trained a metric using MEN on the [ConceptNet Numberbatch Vectors](https://github.com/commonsense/conceptnet-numberbatch/tree/16.09)
 as presented in [ConceptNet 5.5: An Open Multilingual Graph of General Knowledge](https://arxiv.org/abs/1612.03975) (AAAI 2017).
 The published embeddings currently pose the state-of-the-art on correlation with human intuition on the MEN dataset (0.868 Spearman Correlation).
