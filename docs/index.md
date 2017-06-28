@@ -74,3 +74,28 @@ or from the corresponding original locations.
 * [Bib100](http://dmir.org/datasets/bib100/)
 
 
+## Appendix
+As an additional experiment, we trained a metric using MEN on the [ConceptNet Numberbatch Vectors](https://github.com/commonsense/conceptnet-numberbatch/tree/16.09)
+as presented in [ConceptNet 5.5: An Open Multilingual Graph of General Knowledge](https://arxiv.org/abs/1612.03975) (AAAI 2017).
+The published embeddings currently pose the state-of-the-art on correlation with human intuition on the MEN dataset (0.868 Spearman Correlation).
+
+We generated 6 training and holdout splits of the MEN word pairs with a ratio of 80:20 each. From the 80% training pairs, we randomly sampled
+90% and trained a metric on these pairs. We repeated this process 10 times. The correlation of the embeddings with the test pairs using the 
+standard cosine measure was taken as baseline.
+
+In the following table, we report the mean correlations for both the baseline and the metric for each split.
+Then, we show that our improvement is in fact significant with p < 0.05.
+
+| splits  || 1     | 2     | 3     | 4     | 5     || mean  |
+| ------- || -----:| -----:| -----:| -----:| -----:|| ---:  |
+| cos     || 0.859 | 0.857 | 0.864 | 0.862 | 0.865 || 0.861 |
+| metric  || 0.875 | 0.880 | 0.873 | 0.880 | 0.878 || 0.877 |
+| p       || **0.030** | **0.002** | 0.219 | **0.012** | 0.069 | **0.028**|
+
+First off, we slightly outperform the ConceptNet Embeddings in each split. Testing the significance of each 
+difference gives us a p-value < 0.05 in most cases. Furthermore, the difference between the mean scores across
+all splits is also significant.
+
+Unfortunately, we haven't yet performed all experiments described in the paper on this embeddings dataset, since the figures
+presented in the paper encourage increased performance when training a metric on the whole training dataset. However, we plan on
+doing this in the near future.
