@@ -79,7 +79,7 @@ As an additional experiment, we trained a metric using MEN on the [ConceptNet Nu
 as presented in [ConceptNet 5.5: An Open Multilingual Graph of General Knowledge](https://arxiv.org/abs/1612.03975) (AAAI 2017).
 The published embeddings currently pose the state-of-the-art on correlation with human intuition on the MEN dataset (0.868 Spearman Correlation).
 
-We generated 6 training and holdout splits of the MEN word pairs with a ratio of 80:20 each. From the 80% training pairs, we randomly sampled
+We generated 5 training and holdout splits of the MEN word pairs with a ratio of 80:20 each. From the 80% training pairs, we randomly sampled
 90% and trained a metric on these pairs. We repeated this process 10 times. The correlation of the embeddings with the test pairs using the 
 standard cosine measure was taken as baseline.
 
