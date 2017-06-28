@@ -86,11 +86,11 @@ standard cosine measure was taken as baseline.
 In the following table, we report the mean correlations for both the baseline and the metric for each split.
 Then, we show that our improvement is in fact significant with p < 0.05.
 
-| splits  || 1     | 2     | 3     | 4     | 5     || mean  |
-| ------- || -----:| -----:| -----:| -----:| -----:|| ---:  |
-| cos     || 0.859 | 0.857 | 0.864 | 0.862 | 0.865 || 0.861 |
-| metric  || 0.875 | 0.880 | 0.873 | 0.880 | 0.878 || 0.877 |
-| p       || **0.030** | **0.002** | 0.219 | **0.012** | 0.069 | **0.028**|
+|         | split 1|split 2|split 3|split 4|split 5| mean  |
+| ------- | -----:| -----:| -----:| -----:| -----:| ---:  |
+| cos     | 0.859 | 0.857 | 0.864 | 0.862 | 0.865 | 0.861 |
+| metric  | 0.875 | 0.880 | 0.873 | 0.880 | 0.878 | 0.877 |
+| p       | **0.030** | **0.002** | 0.219 | **0.012** | 0.069 | **0.028**|
 
 First off, we slightly outperform the ConceptNet Embeddings in each split. Testing the significance of each 
 difference gives us a p-value < 0.05 in most cases. Furthermore, the difference between the mean scores across
