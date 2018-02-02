@@ -66,7 +66,7 @@ def get_train_parameters(examples):
 def train(examples):
     # train on these examples
     X, constraints, weights, prior = get_train_parameters(examples)
-    return LSML().fit(X, constraints, weights=weights, prior=prior)
+    return LSML().fit(X, constraints, weights=weights)
 
 
 def train_until_completed(data, n, evaldata=None, attempts=10):

@@ -6,7 +6,10 @@ by
 [Thomas Niebler](http://www.dmir.uni-wuerzburg.de/staff/niebler),
 [Martin Becker](http://www.dmir.uni-wuerzburg.de/staff/martinbecker),
 [Christian Pölitz](http://www.dmir.uni-wuerzburg.de/staff/christian_poelitz) and
-[Andreas Hotho](http://www.dmir.uni-wuerzburg.de/staff/hotho).
+[Andreas Hotho](http://www.dmir.uni-wuerzburg.de/staff/hotho), all members
+of the [DMIR group](http://dmir.org) at the University of Würzburg.
+
+[Thomas](http://www.thomas-niebler.de) is maintaining the code, while the [DMIR group](http://dmir.org) will offer support
 
 ## Overview
 In our work, we learned a semantic relatedness measure from human feedback,

@@ -1,1 +1,2 @@
-from lsml import LSML
+print("LOCAL METRIC LEARN")
+from .lsml import LSML
