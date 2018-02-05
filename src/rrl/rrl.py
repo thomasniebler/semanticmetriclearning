@@ -1,11 +1,10 @@
 from datetime import datetime
 
 import numpy as np
+import utils
 from six.moves import xrange
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
-
-import rrl.utils
 
 
 class RRL():
@@ -23,10 +22,10 @@ class RRL():
         self.verbose = verbose
 
     def _prepare_inputs(self, vectors, relscores):
-        X, constraints, wordpairs = rrl.utils.get_train_parameters(relscores, vectors)
+        X, constraints, wordpairs = utils.get_train_parameters(relscores, vectors)
         self.vectors = vectors
         self.prep_eval_dfs = {
-            evaldfname: rrl.utils.prepare_dataset(rrl.utils.load_eval_df(evaldfname), self.vectors) for evaldfname in
+            evaldfname: utils.prepare_dataset(utils.load_eval_df(evaldfname), self.vectors) for evaldfname in
             ["ws353", "ws353rel", "ws353sim", "men", "mturk", "mturk771", "simlex999"]
         }
         self.X_ = X
@@ -89,7 +88,7 @@ class RRL():
                     M_best = new_metric
             print('iter', it, 'cost', s_best, 'best step', l_best, 'gradient norm', grad_norm)
             if eval_steps and M_best is not None:
-                print([(dfname, rrl.utils.evaluate(self.prep_eval_dfs[dfname], metric=M_best)) for dfname in
+                print([(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=M_best)) for dfname in
                        self.prep_eval_dfs])
             if M_best is None:
                 # this is due to the convexity of RRL: IS IT CONVEX???
