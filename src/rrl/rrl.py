@@ -55,6 +55,8 @@ class RRL():
         """
         if step_sizes is None:
             step_sizes = 10 ** np.linspace(-3, 0, 10)
+        if self.verbose:
+            print(step_sizes)
         self._prepare_inputs(vectors, relscores)
         # this is only for plotting and debugging purposes
         self._Ms = [self.M_]
@@ -109,9 +111,10 @@ class RRL():
         transformed = normalize(self.X_.dot(np.linalg.cholesky(metric)))
         if self.verbose:
             print(str(datetime.now()) + "\t\tcosaMbs")
-        cosines = np.diag(cosine_similarity(transformed[self.wordpairs[:, 0]], transformed[self.wordpairs[:, 1]]))[
+        cosines = np.diag(cosine_similarity(transformed[self.wordpairs[:, 0]],
+                                            transformed[self.wordpairs[:, 1]]))[
             self.constraints]
-        # this then looks for cosab < coscd
+        # this then looks for cosab - coscd < 0
         vio = cosines[:, 0] - cosines[:, 1] < 0
         if self.verbose:
             print(str(len(cosines[vio])) + " violations found")
@@ -119,12 +122,13 @@ class RRL():
 
     def _comparison_loss(self, metric):
         """
-        loss function. very easy to compute. furthermore it is convex.
+        loss function.
+        this implements sum(constraint) max(0, rel(c,d) - rel(a, b)) ** 2
         :param metric: a PSD symmetric metric.
         :return:
         """
         vio, cosines, _ = self._violations(metric)
-        closs = np.sum(((cosines[:, 0] - cosines[:, 1]) ** 2)[vio] / len(cosines))
+        closs = np.sum(((cosines[vio, 0] - cosines[vio, 1]) ** 2) / len(cosines[vio]))
         if self.verbose:
             print("comparison loss: " + str(closs))
         return closs
@@ -150,8 +154,10 @@ class RRL():
         Xbc = sc.broadcast(self.X_)
         wordpairsbc = sc.broadcast(self.wordpairs)
         transformedbc = sc.broadcast(transformed)
-        dMetric += entries.mapValues(
-            lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).values().sum()
+        clossgradient = entries.mapValues(
+            lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).values().sum()\
+                / len(violations)
+        dMetric += clossgradient
         if self.verbose:
             print(str(datetime.now()) + "\tGradient done")
         sc.stop()
@@ -162,7 +168,7 @@ def _regularization_loss(metric):
     trace = np.trace(metric)
     sign, logdet = np.linalg.slogdet(metric)
     logdet = sign * logdet
-    return (trace + logdet) / (metric.shape[0] ** 3)
+    return (trace + logdet) / (metric.shape[0] ** 2)
 
 
 def _make_psd(metric, tol=1e-8):
@@ -171,7 +177,8 @@ def _make_psd(metric, tol=1e-8):
 
 
 def makeouter(X, col1, col2, transformed):
-    return np.outer(X[col1], X[col2]) / (np.linalg.norm(transformed[col1]) * np.linalg.norm(transformed[col2]))
+    return np.outer(X[col1], X[col2])\
+           / (np.linalg.norm(transformed[col1]) * np.linalg.norm(transformed[col2]))
 
 
 def get_loss_gradient(entry, X, wordpairs, transformed):
