@@ -107,8 +107,7 @@ class RRL():
     def _violations(self, metric):
         if self.verbose:
             print(str(datetime.now()) + "\tCalculating violations")
-        # TODO: Is the transpose correct here?
-        transformed = normalize(self.X_.dot(np.linalg.cholesky(metric).T))
+        transformed = normalize(self.X_.dot(np.linalg.cholesky(metric)))
         if self.verbose:
             print(str(datetime.now()) + "\t\tcosaMbs")
         cosines = np.diag(cosine_similarity(transformed[self.wordpairs[:, 0]], transformed[self.wordpairs[:, 1]]))[
@@ -145,14 +144,15 @@ class RRL():
         violations, cosines, transformed = self._violations(metric)
         if self.verbose:
             print(str(datetime.now()) + "\tCalculating gradient for " + str(len(cosines[violations])) + " violations")
-        vio_count = 0
         import pyspark
         sc = pyspark.SparkContext.getOrCreate()
-        entries = sc.parallelize(np.hstack([self.constraints[violations], cosines[violations]]))
+        entries = sc.parallelize(
+            zip(range(len(cosines[violations])), np.hstack([self.constraints[violations], cosines[violations]])))
         Xbc = sc.broadcast(self.X_)
         wordpairsbc = sc.broadcast(self.wordpairs)
         transformedbc = sc.broadcast(transformed)
-        dMetric += entries.map(lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).sum()
+        dMetric += entries.mapValues(
+            lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).values().sum()
         if self.verbose:
             print(str(datetime.now()) + "\tGradient done")
         sc.stop()
