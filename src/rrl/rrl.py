@@ -54,7 +54,7 @@ class RRL():
                 step sizes for the gradient descent step. If None, np.logspace(-2, 1, 10) is the default value.
         """
         if step_sizes is None:
-            step_sizes = np.logspace(-2, 1, 10)
+            step_sizes = 10 ** np.linspace(-3, 0, 10)
         self._prepare_inputs(vectors, relscores)
         # this is only for plotting and debugging purposes
         self._Ms = [self.M_]
