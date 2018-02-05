@@ -8,7 +8,7 @@ from sklearn.preprocessing import normalize
 
 
 class RRL():
-    def __init__(self, tol=1e-3, max_iter=1000, verbose=False):
+    def __init__(self, tol=1e-10, max_iter=1000, verbose=False):
         """Initialize RRL.
         Parameters
         ----------
@@ -40,7 +40,7 @@ class RRL():
         return {entry[0]: np.linalg.cholesky(self.M_).T.dot(entry[1]) for entry in self.vectors.items()}
 
     def fit(self, vectors, relscores, step_sizes=None,
-            eval_steps=False, save_steps=False, outputpath=None):
+            eval_steps=False, save_steps=False):
         """Learn the LSML model.
         Parameters
         ----------
@@ -128,7 +128,7 @@ class RRL():
         :return:
         """
         vio, cosines, _ = self._violations(metric)
-        closs = np.sum(((cosines[vio, 0] - cosines[vio, 1]) ** 2) / len(cosines[vio]))
+        closs = np.sum(((cosines[vio, 0] - cosines[vio, 1]) ** 2) / len(cosines))
         if self.verbose:
             print("comparison loss: " + str(closs))
         return closs
@@ -155,8 +155,8 @@ class RRL():
         wordpairsbc = sc.broadcast(self.wordpairs)
         transformedbc = sc.broadcast(transformed)
         clossgradient = entries.mapValues(
-            lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).values().sum()\
-                / len(violations)
+            lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).values().sum() \
+                        / len(cosines)
         dMetric += clossgradient
         if self.verbose:
             print(str(datetime.now()) + "\tGradient done")

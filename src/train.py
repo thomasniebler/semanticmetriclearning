@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(description="Retrain Word Embeddings using Rela
 parser.add_argument('embeddings', help="word embedding text file. file format is \"name val1 val2 val3 ...\"")
 parser.add_argument('relscores', help="a tab separated csv file with word pairs and numeric relatedness scores, columns"
                                       " headers must be in the first line")
-parser.add_argument('-l', '--learningrate', type=float, help="learning rate")
+parser.add_argument('-l', '--learningrate', type=float, default=None, help="learning rate")
 parser.add_argument('-v', '--verbose', action="store_true", help="more elaborate output")
 parser.add_argument('--outputfile', help="path where the transformed vectors should be saved to")
 parser.add_argument('--evalsteps', action="store_true",
