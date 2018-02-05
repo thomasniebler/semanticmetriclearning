@@ -54,13 +54,15 @@ class RRL():
                 step sizes for the gradient descent step. If None, np.logspace(-2, 1, 10) is the default value.
         """
         if step_sizes is None:
-            step_sizes = 10 ** np.linspace(-3, 0, 10)
+            step_sizes = 10 ** np.linspace(-6, 0, 1000)
         if self.verbose:
             print(step_sizes)
         self._prepare_inputs(vectors, relscores)
         # this is only for plotting and debugging purposes
         self._Ms = [self.M_]
+        self._steps = [1]
         s_best = self._loss(self.M_)
+        self._losses = [s_best]
         if self.verbose:
             print('initial loss', s_best)
         # iterations
@@ -80,15 +82,13 @@ class RRL():
             for step_size in step_sizes:
                 if self.verbose:
                     print(str(datetime.now()) + "\tStep size: " + str(step_size))
-                step_size /= grad_norm
-                new_metric = self.M_ - step_size * grad
+                new_metric = self.M_ - step_size * grad / grad_norm
                 new_metric = _make_psd(new_metric)
                 step_loss = self._loss(new_metric)
                 if step_loss < s_best:
                     l_best = step_size
                     s_best = step_loss
                     M_best = new_metric
-            print('iter', it, 'cost', s_best, 'best step', l_best, 'gradient norm', grad_norm)
             if eval_steps and M_best is not None:
                 print([(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=M_best)) for dfname in
                        self.prep_eval_dfs])
@@ -96,7 +96,10 @@ class RRL():
                 # this is due to the convexity of RRL: IS IT CONVEX???
                 # If we reached a minimum, it is the global minimum.
                 break
+            print('iter', it, 'cost', s_best, 'best step', l_best, 'gradient norm', grad_norm)
             self._Ms.append(M_best)
+            self._steps.append(l_best)
+            self._losses.append(s_best)
             self.M_ = M_best
         else:
             if self.verbose:

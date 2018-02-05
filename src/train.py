@@ -38,6 +38,9 @@ for met in model._Ms:
         "mturk771", rrl.utils.evaluate(model.prep_eval_dfs["mturk771"], metric=met),
     )
 
+for i_step_loss in zip(range(len(model._losses)), model._steps, model._losses):
+    print(i_step_loss[0], i_step_loss[1], i_step_loss[2])
+
 print(str(datetime.now()) + "\tTransforming vectors...")
 transformedvecs = model.transform()
 outputfile = open(args.outputfile, "w")
