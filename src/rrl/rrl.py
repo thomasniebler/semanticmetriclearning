@@ -1,10 +1,18 @@
 from datetime import datetime
 
 import numpy as np
+import pyspark
 import utils
 from six.moves import xrange
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
+
+
+def batch(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
+
 
 
 class RRL():
@@ -40,7 +48,7 @@ class RRL():
     def transform(self):
         return {entry[0]: np.linalg.cholesky(self.M_).T.dot(entry[1]) for entry in self.vectors.items()}
 
-    def fit(self, vectors, relscores, learning_rate=0.05,
+    def fit(self, vectors, relscores, learning_rate=0.05, batchsize=50,
             eval_steps=False, save_steps=False):
         """Learn the LSML model.
         Parameters
@@ -60,25 +68,28 @@ class RRL():
         if self.verbose:
             print('initial loss', self._loss(self.M_))
         # iterations
+        sc = pyspark.SparkContext().getOrCreate()
         for epoch in xrange(1, self.epochs + 1):
             # shuffle constraints
             violations, cosines, _ = self._violations(self.M_)
             current_constraints = np.hstack([self.constraints[violations], cosines[violations]])
             np.random.shuffle(current_constraints)
-            for constraint in current_constraints:
-                print(constraint)
+            for constraint_batch in batch(current_constraints, n=batchsize):
                 transformed = np.dot(self.X_, np.linalg.cholesky(self.M_))
-                grad = get_loss_gradient(constraint, self.X_, self.wordpairs, transformed) + \
-                       self.alpha * _regularization_loss(self.M_)
+                grad = self.batchgradient(self.M_, constraint_batch, transformed)
                 grad_norm = np.linalg.norm(grad)
                 self.M_ = self.M_ - learning_rate * grad / grad_norm
+                self.M_ = _make_psd(self.M_)
+                print(np.rank(self.M_), np.linalg.norm(self.M_ - self.M_.T))
             if eval_steps:
-                print([(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
+                print("epoch", epoch,
+                      [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
                        self.prep_eval_dfs])
         else:
             if self.verbose:
                 print("Didn't converge after", epoch, "iterations. Final loss:", self._loss(self.M_))
         print("Finished after ", epoch, "iterations.")
+        sc.stop()
         return self
 
     def _violations(self, metric):
@@ -99,23 +110,21 @@ class RRL():
                 closs) + "\tRLoss: " + str(rloss))
         return closs + rloss
 
-    def _gradient(self, metric):
+    def batchgradient(self, metric, constraint_batch, transformed):
         # unused
         dMetric = (np.identity(metric.shape[0]) - np.linalg.inv(metric))  # / (metric.shape[0] ** 2)
-        violations, cosines, transformed = self._violations(metric)
         if self.verbose:
-            print(str(datetime.now()) + "\tCalculating gradient for " + str(len(cosines[violations])) + " violations")
-        import pyspark
+            print(str(datetime.now()) + "\tCalculating gradient for " + str(len(constraint_batch)) + " violations")
+        for entry in constraint_batch:
+            dMetric += get_loss_gradient()
         sc = pyspark.SparkContext.getOrCreate()
-        entries = sc.parallelize(
-            zip(range(len(cosines[violations])), np.hstack([self.constraints[violations], cosines[violations]])))
+        entries = sc.parallelize(zip(range(len(constraint_batch)), constraint_batch))
         Xbc = sc.broadcast(self.X_)
         wordpairsbc = sc.broadcast(self.wordpairs)
         transformedbc = sc.broadcast(transformed)
         clossgradient = entries.mapValues(
             lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).values().sum()  # / len(cosines)
         dMetric += clossgradient
-        sc.stop()
         return dMetric
 
 
@@ -140,7 +149,7 @@ def get_loss_gradient(entry, X, wordpairs, transformed):
     wp1, wp2, cosab, coscd = entry
     wp1 = int(wp1)
     wp2 = int(wp2)
-    vavbT = makeouter(X, wordpairs[wp1][0], wordpairs[wp1][1], transformed)
+    vavbT = makeouter(X.value, wordpairs[wp1][0], wordpairs[wp1][1], transformed)
     vavaTvbvbT = makeouter(X, wordpairs[wp1][0], wordpairs[wp1][0], transformed) \
                  + makeouter(X, wordpairs[wp1][1], wordpairs[wp1][1], transformed)
     vcvdT = makeouter(X, wordpairs[wp2][0], wordpairs[wp2][1], transformed)
