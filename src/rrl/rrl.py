@@ -8,17 +8,18 @@ from sklearn.preprocessing import normalize
 
 
 class RRL():
-    def __init__(self, tol=1e-10, max_iter=1000, verbose=False):
+    def __init__(self, tol=1e-10, epochs=1000, regularization_alpha=1, verbose=False):
         """Initialize RRL.
         Parameters
         ----------
         tol : float, optional
-        max_iter : int, optional
+        epochs : int, optional
         verbose : bool, optional
                 if True, prints information while learning
         """
+        self.alpha = regularization_alpha
         self.tol = tol
-        self.max_iter = max_iter
+        self.epochs = epochs
         self.verbose = verbose
 
     def _prepare_inputs(self, vectors, relscores):
@@ -39,72 +40,41 @@ class RRL():
     def transform(self):
         return {entry[0]: np.linalg.cholesky(self.M_).T.dot(entry[1]) for entry in self.vectors.items()}
 
-    def fit(self, vectors, relscores, step_sizes=None,
+    def fit(self, vectors, relscores, learning_rate=0.05,
             eval_steps=False, save_steps=False):
         """Learn the LSML model.
         Parameters
         ----------
         X : (n x d) word embedding matrix
                 each row corresponds to a single word embedding
-        constraints : matrix (2 x c)
+        vectors : matrix (2 x c)
                 (wp1, wp2) indices into wordpairs, such that rel(wp1) > rel(wp2)
-        wordpairs : matrix (2 x p)
+        relscores : matrix (2 x p)
                 (w1, w2) with two word indices into X
-        step_sizes : 1-dimensional numpy array, default None
+        learning_rate : 1-dimensional numpy array, default None
                 step sizes for the gradient descent step. If None, np.logspace(-2, 1, 10) is the default value.
+        eval_steps : evaluate metric after each epoch on a set of word similarity datasets
+        save_steps : not yet implemented. should save the model (aka the transformation matrix) after each step.
         """
-        if step_sizes is None:
-            step_sizes = 10 ** np.linspace(-6, 1, 1000)
-        if self.verbose:
-            print(step_sizes)
         self._prepare_inputs(vectors, relscores)
-        # this is only for plotting and debugging purposes
-        self._Ms = [self.M_]
-        self._steps = [1]
-        s_best = self._loss(self.M_)
-        self._losses = [s_best]
         if self.verbose:
-            print('initial loss', s_best)
+            print('initial loss', self._loss(self.M_))
         # iterations
-        for it in xrange(1, self.max_iter + 1):
-            grad = self._gradient(self.M_)
-            grad_norm = np.linalg.norm(grad)
-            if self.verbose:
-                print(str(datetime.now()) + "\tGradient done. Norm: " + str(grad_norm))
-            if grad_norm < self.tol:
-                if self.verbose:
-                    print(str(datetime.now()) + "\tgradient norm " + str(grad_norm) + " is lower than tolerance " + str(
-                        self.tol))
-                break
-            M_best = None
-            l_best = 100
-            # TODO: realize that by applying a "min" step, as we have to calculate
-            # each step anyway. And if we are convex, we can even break after finding a minimum.
-            for step_size in step_sizes:
-                new_metric = self.M_ - step_size * grad / grad_norm
-                new_metric = _make_psd(new_metric)
-                step_loss = self._loss(new_metric)
-                if step_loss < s_best:
-                    l_best = step_size
-                    s_best = step_loss
-                    M_best = new_metric
-            if M_best is None:
-                # this is due to the convexity of RRL: IS IT CONVEX???
-                # If we reached a minimum, it is the global minimum.
-                break
-            print('iter', it, 'cost', s_best, 'best step', l_best, 'gradient norm', grad_norm)
-            if eval_steps and M_best is not None:
-                print([(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=M_best)) for dfname in
+        for epoch in xrange(1, self.epochs + 1):
+            for constraint in np.random.shuffle(self.constraints):
+                print(constraint)
+                transformed = np.dot(self.X_, np.linalg.cholesky(self.M_))
+                grad = get_loss_gradient(constraint, self.X_, self.wordpairs, transformed) + \
+                       self.alpha * _regularization_loss(self.M_)
+                grad_norm = np.linalg.norm(grad)
+                self.M_ = self.M_ - learning_rate * grad / grad_norm
+            if eval_steps:
+                print([(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
                        self.prep_eval_dfs])
-            self._Ms.append(M_best)
-            self._steps.append(l_best)
-            self._losses.append(s_best)
-            self.M_ = M_best
         else:
             if self.verbose:
-                print("Didn't converge after", it, "iterations. Final loss:", s_best)
-        self.n_iter_ = it
-        print("Finished after ", it, "iterations.")
+                print("Didn't converge after", epoch, "iterations. Final loss:", self._loss(self.M_))
+        print("Finished after ", epoch, "iterations.")
         return self
 
     def _violations(self, metric):
@@ -114,8 +84,6 @@ class RRL():
             self.constraints]
         # this then looks for cosab - coscd < 0
         vio = cosines[:, 0] - cosines[:, 1] < 0
-        if self.verbose:
-            print(str(len(cosines[vio])) + " violations found")
         return vio, cosines, transformed
 
     def _loss(self, metric):
@@ -128,6 +96,7 @@ class RRL():
         return closs + rloss
 
     def _gradient(self, metric):
+        # unused
         dMetric = (np.identity(metric.shape[0]) - np.linalg.inv(metric))  # / (metric.shape[0] ** 2)
         violations, cosines, transformed = self._violations(metric)
         if self.verbose:

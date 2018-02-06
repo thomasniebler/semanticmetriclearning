@@ -25,21 +25,7 @@ relscores["relatedness"] = relscores["relatedness"].apply(float)
 
 alg = rrl.RRL(verbose=args.verbose)
 print(str(datetime.now()) + "\tTraining...")
-model = alg.fit(vectors, relscores, eval_steps=args.evalsteps, step_sizes=args.learningrate)
-
-for met in model._Ms:
-    print(
-        "ws353", rrl.utils.evaluate(model.prep_eval_dfs["ws353"], metric=met),
-        "ws353sim", rrl.utils.evaluate(model.prep_eval_dfs["ws353sim"], metric=met),
-        "ws353rel", rrl.utils.evaluate(model.prep_eval_dfs["ws353rel"], metric=met),
-        "men", rrl.utils.evaluate(model.prep_eval_dfs["men"], metric=met),
-        "simlex999", rrl.utils.evaluate(model.prep_eval_dfs["simlex999"], metric=met),
-        "mturk", rrl.utils.evaluate(model.prep_eval_dfs["mturk"], metric=met),
-        "mturk771", rrl.utils.evaluate(model.prep_eval_dfs["mturk771"], metric=met),
-    )
-
-for i_step_loss in zip(range(len(model._losses)), model._steps, model._losses):
-    print(i_step_loss[0], i_step_loss[1], i_step_loss[2])
+model = alg.fit(vectors, relscores, eval_steps=args.evalsteps, learning_rate=args.learningrate)
 
 print(str(datetime.now()) + "\tTransforming vectors...")
 transformedvecs = model.transform()
