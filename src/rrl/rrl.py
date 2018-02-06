@@ -54,7 +54,7 @@ class RRL():
                 step sizes for the gradient descent step. If None, np.logspace(-2, 1, 10) is the default value.
         """
         if step_sizes is None:
-            step_sizes = 10 ** np.linspace(-6, 0, 1000)
+            step_sizes = 10 ** np.linspace(-6, 1, 1000)
         if self.verbose:
             print(step_sizes)
         self._prepare_inputs(vectors, relscores)
@@ -73,15 +73,14 @@ class RRL():
                 print(str(datetime.now()) + "\tGradient done. Norm: " + str(grad_norm))
             if grad_norm < self.tol:
                 if self.verbose:
-                    print(str(datetime.now()) + "\tgradient norm is lower than tolerance ")
+                    print(str(datetime.now()) + "\tgradient norm " + str(grad_norm) + " is lower than tolerance " + str(
+                        self.tol))
                 break
             M_best = None
             l_best = 100
             # TODO: realize that by applying a "min" step, as we have to calculate
             # each step anyway. And if we are convex, we can even break after finding a minimum.
             for step_size in step_sizes:
-                if self.verbose:
-                    print(str(datetime.now()) + "\tStep size: " + str(step_size))
                 new_metric = self.M_ - step_size * grad / grad_norm
                 new_metric = _make_psd(new_metric)
                 step_loss = self._loss(new_metric)
@@ -89,14 +88,14 @@ class RRL():
                     l_best = step_size
                     s_best = step_loss
                     M_best = new_metric
-            if eval_steps and M_best is not None:
-                print([(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=M_best)) for dfname in
-                       self.prep_eval_dfs])
             if M_best is None:
                 # this is due to the convexity of RRL: IS IT CONVEX???
                 # If we reached a minimum, it is the global minimum.
                 break
             print('iter', it, 'cost', s_best, 'best step', l_best, 'gradient norm', grad_norm)
+            if eval_steps and M_best is not None:
+                print([(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=M_best)) for dfname in
+                       self.prep_eval_dfs])
             self._Ms.append(M_best)
             self._steps.append(l_best)
             self._losses.append(s_best)
@@ -109,11 +108,7 @@ class RRL():
         return self
 
     def _violations(self, metric):
-        if self.verbose:
-            print(str(datetime.now()) + "\tCalculating violations")
         transformed = normalize(self.X_.dot(np.linalg.cholesky(metric)))
-        if self.verbose:
-            print(str(datetime.now()) + "\t\tcosaMbs")
         cosines = np.diag(cosine_similarity(transformed[self.wordpairs[:, 0]],
                                             transformed[self.wordpairs[:, 1]]))[
             self.constraints]
@@ -123,30 +118,17 @@ class RRL():
             print(str(len(cosines[vio])) + " violations found")
         return vio, cosines, transformed
 
-    def _comparison_loss(self, metric):
-        """
-        loss function.
-        this implements sum(constraint) max(0, rel(c,d) - rel(a, b)) ** 2
-        :param metric: a PSD symmetric metric.
-        :return:
-        """
-        vio, cosines, _ = self._violations(metric)
-        closs = np.sum(((cosines[vio, 0] - cosines[vio, 1]) ** 2) / len(cosines))
-        if self.verbose:
-            print("comparison loss: " + str(closs))
-        return closs
-
     def _loss(self, metric):
-        if self.verbose:
-            print(str(datetime.now()) + "\tCalculating loss")
-        closs = self._comparison_loss(metric)
+        vio, cosines, _ = self._violations(metric)
+        closs = np.sum(((cosines[vio, 0] - cosines[vio, 1]) ** 2))  # / len(cosines)
         rloss = _regularization_loss(metric)
         if self.verbose:
-            print(str(datetime.now()) + "\t:" + str(closs) + "\t" + str(rloss))
+            print(str(datetime.now()) + "\tviolations: " + str(len(cosines[vio])) + "\tCLoss: " + str(
+                closs) + "\tRLoss: " + str(rloss))
         return closs + rloss
 
     def _gradient(self, metric):
-        dMetric = (np.identity(metric.shape[0]) - np.linalg.inv(metric)) / (metric.shape[0] ** 2)
+        dMetric = (np.identity(metric.shape[0]) - np.linalg.inv(metric))  # / (metric.shape[0] ** 2)
         violations, cosines, transformed = self._violations(metric)
         if self.verbose:
             print(str(datetime.now()) + "\tCalculating gradient for " + str(len(cosines[violations])) + " violations")
@@ -158,11 +140,8 @@ class RRL():
         wordpairsbc = sc.broadcast(self.wordpairs)
         transformedbc = sc.broadcast(transformed)
         clossgradient = entries.mapValues(
-            lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).values().sum() \
-                        / len(cosines)
+            lambda entry: get_loss_gradient(entry, Xbc, wordpairsbc, transformedbc)).values().sum()  # / len(cosines)
         dMetric += clossgradient
-        if self.verbose:
-            print(str(datetime.now()) + "\tGradient done")
         sc.stop()
         return dMetric
 
@@ -171,7 +150,7 @@ def _regularization_loss(metric):
     trace = np.trace(metric)
     sign, logdet = np.linalg.slogdet(metric)
     logdet = sign * logdet
-    return (trace + logdet) / (metric.shape[0] ** 2)
+    return (trace + logdet)  # / (metric.shape[0] ** 2)
 
 
 def _make_psd(metric, tol=1e-8):
