@@ -42,7 +42,7 @@ class RRL():
         return {entry[0]: np.linalg.cholesky(self.M_).T.dot(entry[1]) for entry in self.vectors.items()}
 
     def fit(self, vectors, relscores, learning_rate=0.05, batchsize=50,
-            eval_steps=False, save_steps=False, output_dir=None, max_spark_cores=30):
+            eval_steps=False, output_dir=None, max_spark_cores=30):
         """Learn the LSML model.
         Parameters
         ----------
@@ -67,6 +67,8 @@ class RRL():
         # iterations
         for epoch in xrange(1, self.epochs + 1):
             # shuffle constraints
+            if epoch % 10 == 0:
+                learning_rate /= 2
             violations, cosines, _ = self._violations(self.M_)
             current_constraints = np.hstack([self.constraints[violations], cosines[violations]])
             np.random.shuffle(current_constraints)
@@ -77,17 +79,16 @@ class RRL():
                 self.M_ = self.M_ - learning_rate * grad / grad_norm
                 self.M_ = _make_psd(self.M_)
             if eval_steps:
-                print("epoch", epoch, "loss", self._loss(self.M_),
-                      [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
+                infotext = ("epoch", epoch, "learning rate", learning_rate, "loss", self._loss(self.M_),
+                            [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
                        self.prep_eval_dfs])
-            if save_steps and output_dir:
-                if output_dir[-1] != "/":
-                    output_dir += "/"
-                import pickle
-                pickle.dump(self.M_, open(output_dir + "M_" + str(epoch) + ".pkl", "wb"))
-                pickle.dump(("epoch", epoch, "loss", self._loss(self.M_),
-                             [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
-                              self.prep_eval_dfs]), open(output_dir + "state_" + str(epoch) + ".pkl", "wb"))
+                print(infotext)
+                if output_dir:
+                    if output_dir[-1] != "/":
+                        output_dir += "/"
+                    import pickle
+                    pickle.dump(self.M_, open(output_dir + "M_" + str(epoch) + ".pkl", "wb"))
+                    pickle.dump(infotext, open(output_dir + "state_" + str(epoch) + ".pkl", "wb"))
             if abs(oldloss - self._loss(self.M_)) < self.tol:
                 break
             oldloss = self._loss(self.M_)
