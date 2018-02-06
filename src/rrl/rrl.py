@@ -8,15 +8,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
 
 
-def batch(iterable, n=1):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
-
-
-
 class RRL():
-    def __init__(self, tol=1e-10, epochs=1000, regularization_alpha=1, verbose=False):
+    def __init__(self, tol=1e-10, epochs=100, regularization_alpha=1, verbose=False):
         """Initialize RRL.
         Parameters
         ----------
@@ -49,7 +42,7 @@ class RRL():
         return {entry[0]: np.linalg.cholesky(self.M_).T.dot(entry[1]) for entry in self.vectors.items()}
 
     def fit(self, vectors, relscores, learning_rate=0.05, batchsize=50,
-            eval_steps=False, save_steps=False):
+            eval_steps=False, save_steps=False, output_dir=None):
         """Learn the LSML model.
         Parameters
         ----------
@@ -65,8 +58,9 @@ class RRL():
         save_steps : not yet implemented. should save the model (aka the transformation matrix) after each step.
         """
         self._prepare_inputs(vectors, relscores)
+        oldloss = self._loss(self.M_)
         if self.verbose:
-            print('initial loss', self._loss(self.M_))
+            print('initial loss', oldloss)
         # iterations
         for epoch in xrange(1, self.epochs + 1):
             # shuffle constraints
@@ -79,16 +73,26 @@ class RRL():
                 grad_norm = np.linalg.norm(grad)
                 self.M_ = self.M_ - learning_rate * grad / grad_norm
                 self.M_ = _make_psd(self.M_)
-                print(self._loss(self.M_))
             if eval_steps:
                 print("epoch", epoch, "loss", self._loss(self.M_),
                       [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
                        self.prep_eval_dfs])
+            if save_steps and output_dir:
+                if output_dir[-1] != "/":
+                    output_dir += "/"
+                import pickle
+                pickle.dump(self.M_, open(output_dir + "M_" + str(epoch) + ".pkl", "wb"))
+                pickle.dump(("epoch", epoch, "loss", self._loss(self.M_),
+                             [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
+                              self.prep_eval_dfs]), open(output_dir + "state_" + str(epoch) + ".pkl", "wb"))
+            if abs(oldloss - self._loss(self.M_)) < self.tol:
+                break
+            oldloss = self._loss(self.M_)
         else:
-            if self.verbose:
-                print("Didn't converge after", epoch, "iterations. Final loss:", self._loss(self.M_))
-        print("Finished after ", epoch, "iterations.")
-        sc.stop()
+            print("Didn't converge after", epoch, "iterations. Final loss:", self._loss(self.M_))
+        print("Finished after ", epoch, "iterations. Final loss:", self._loss(self.M_))
+        # turn off any running spark context
+        pyspark.SparkContext.getOrCreate().stop()
         return self
 
     def _violations(self, metric):
@@ -153,3 +157,9 @@ def get_loss_gradient(entry, X, wordpairs, transformed):
     vcvcTvdvdT = makeouter(X.value, wordpairs.value[wp2][0], wordpairs.value[wp2][0], transformed.value) \
                  + makeouter(X.value, wordpairs.value[wp2][1], wordpairs.value[wp2][1], transformed.value)
     return (coscd - cosab) * (vcvdT - vcvcTvdvdT * coscd - (vavbT - vavaTvbvbT * cosab))
+
+
+def batch(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
