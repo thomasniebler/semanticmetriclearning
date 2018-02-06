@@ -61,7 +61,9 @@ class RRL():
             print('initial loss', self._loss(self.M_))
         # iterations
         for epoch in xrange(1, self.epochs + 1):
-            for constraint in np.random.shuffle(self.constraints):
+            # shuffle constraints
+            np.random.shuffle(self.constraints)
+            for constraint in self.constraints:
                 print(constraint)
                 transformed = np.dot(self.X_, np.linalg.cholesky(self.M_))
                 grad = get_loss_gradient(constraint, self.X_, self.wordpairs, transformed) + \
