@@ -140,10 +140,10 @@ def get_loss_gradient(entry, X, wordpairs, transformed):
     wp1, wp2, cosab, coscd = entry
     wp1 = int(wp1)
     wp2 = int(wp2)
-    vavbT = makeouter(X.value, wordpairs.value[wp1][0], wordpairs.value[wp1][1], transformed.value)
-    vavaTvbvbT = makeouter(X.value, wordpairs.value[wp1][0], wordpairs.value[wp1][0], transformed.value) \
-                 + makeouter(X.value, wordpairs.value[wp1][1], wordpairs.value[wp1][1], transformed.value)
-    vcvdT = makeouter(X.value, wordpairs.value[wp2][0], wordpairs.value[wp2][1], transformed.value)
-    vcvcTvdvdT = makeouter(X.value, wordpairs.value[wp2][0], wordpairs.value[wp2][0], transformed.value) \
-                 + makeouter(X.value, wordpairs.value[wp2][1], wordpairs.value[wp2][1], transformed.value)
+    vavbT = makeouter(X, wordpairs[wp1][0], wordpairs[wp1][1], transformed)
+    vavaTvbvbT = makeouter(X, wordpairs[wp1][0], wordpairs[wp1][0], transformed) \
+                 + makeouter(X, wordpairs[wp1][1], wordpairs[wp1][1], transformed)
+    vcvdT = makeouter(X, wordpairs[wp2][0], wordpairs[wp2][1], transformed)
+    vcvcTvdvdT = makeouter(X, wordpairs[wp2][0], wordpairs[wp2][0], transformed) \
+                 + makeouter(X, wordpairs[wp2][1], wordpairs[wp2][1], transformed)
     return (coscd - cosab) * (vcvdT - vcvcTvdvdT * coscd - (vavbT - vavaTvbvbT * cosab))
