@@ -42,7 +42,7 @@ class RRL():
         return {entry[0]: np.linalg.cholesky(self.M_).T.dot(entry[1]) for entry in self.vectors.items()}
 
     def fit(self, vectors, relscores, learning_rate=0.05, batchsize=50,
-            eval_steps=False, save_steps=False, output_dir=None):
+            eval_steps=False, save_steps=False, output_dir=None, max_spark_cores=30):
         """Learn the LSML model.
         Parameters
         ----------
@@ -61,6 +61,9 @@ class RRL():
         oldloss = self._loss(self.M_)
         if self.verbose:
             print('initial loss', oldloss)
+        # start a pyspark context
+        sconf = pyspark.SparkConf().setAppName("RRL").set("spark.cores.max", str(max_spark_cores))
+        pyspark.SparkContext.getOrCreate(sconf)
         # iterations
         for epoch in xrange(1, self.epochs + 1):
             # shuffle constraints
