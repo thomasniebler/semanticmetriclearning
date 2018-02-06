@@ -19,6 +19,7 @@ parser.add_argument('-c', '--maxsparkcores', type=int, default=30,
                     help="maximum number of cores that gradient computation can use")
 parser.add_argument('-e', '--evalsteps', action="store_true",
                     help="show evaluation scores on a range of datasets after every iteration")
+parser.add_argument('-p', '--epochs', type=int, default=100, help="Number of training epochs")
 args = parser.parse_args()
 
 print(str(datetime.now()) + "\tLoading data...")
@@ -27,7 +28,7 @@ relscores = pandas.read_csv(args.relscores, header=0, sep="\t")
 relscores.columns = ["termA", "termB", "relatedness"]
 relscores["relatedness"] = relscores["relatedness"].apply(float)
 
-alg = rrl.RRL(verbose=args.verbose)
+alg = rrl.RRL(verbose=args.verbose, epochs=args.epochs)
 print(str(datetime.now()) + "\tTraining...")
 model = alg.fit(vectors, relscores, eval_steps=args.evalsteps, learning_rate=args.learningrate,
                 batchsize=args.batchsize, output_dir=args.outputdir, max_spark_cores=args.maxsparkcores)
