@@ -80,9 +80,9 @@ class RRL():
                 grad_norm = np.linalg.norm(grad)
                 self.M_ = self.M_ - learning_rate * grad / grad_norm
                 self.M_ = _make_psd(self.M_)
-                print(np.rank(self.M_), np.linalg.norm(self.M_ - self.M_.T))
+                print(self._loss(self.M_))
             if eval_steps:
-                print("epoch", epoch,
+                print("epoch", epoch, "loss", self._loss(self.M_),
                       [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
                        self.prep_eval_dfs])
         else:
