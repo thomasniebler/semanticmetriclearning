@@ -62,8 +62,10 @@ class RRL():
         # iterations
         for epoch in xrange(1, self.epochs + 1):
             # shuffle constraints
-            np.random.shuffle(self.constraints)
-            for constraint in self.constraints:
+            violations, cosines, _ = self._violations(self.M_)
+            current_constraints = np.hstack([self.constraints[violations], cosines[violations]])
+            np.random.shuffle(current_constraints)
+            for constraint in current_constraints:
                 print(constraint)
                 transformed = np.dot(self.X_, np.linalg.cholesky(self.M_))
                 grad = get_loss_gradient(constraint, self.X_, self.wordpairs, transformed) + \
