@@ -23,7 +23,7 @@ parser.add_argument('-p', '--epochs', type=int, default=100, help="Number of tra
 args = parser.parse_args()
 
 print(str(datetime.now()) + "\tLoading data...")
-vectors = utils.load_vecs(args.embeddings)
+vectors = utils.load_vecs(args.inputfile)
 relscores = pandas.read_csv(args.relscores, header=0, sep="\t")
 relscores.columns = ["termA", "termB", "relatedness"]
 relscores["relatedness"] = relscores["relatedness"].apply(float)
