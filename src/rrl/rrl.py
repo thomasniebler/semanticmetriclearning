@@ -115,8 +115,6 @@ class RRL():
         dMetric = (np.identity(metric.shape[0]) - np.linalg.inv(metric))  # / (metric.shape[0] ** 2)
         if self.verbose:
             print(str(datetime.now()) + "\tCalculating gradient for " + str(len(constraint_batch)) + " violations")
-        for entry in constraint_batch:
-            dMetric += get_loss_gradient()
         sc = pyspark.SparkContext.getOrCreate()
         entries = sc.parallelize(zip(range(len(constraint_batch)), constraint_batch))
         Xbc = sc.broadcast(self.X_)
@@ -149,10 +147,10 @@ def get_loss_gradient(entry, X, wordpairs, transformed):
     wp1, wp2, cosab, coscd = entry
     wp1 = int(wp1)
     wp2 = int(wp2)
-    vavbT = makeouter(X.value, wordpairs[wp1][0], wordpairs[wp1][1], transformed)
-    vavaTvbvbT = makeouter(X, wordpairs[wp1][0], wordpairs[wp1][0], transformed) \
-                 + makeouter(X, wordpairs[wp1][1], wordpairs[wp1][1], transformed)
-    vcvdT = makeouter(X, wordpairs[wp2][0], wordpairs[wp2][1], transformed)
-    vcvcTvdvdT = makeouter(X, wordpairs[wp2][0], wordpairs[wp2][0], transformed) \
-                 + makeouter(X, wordpairs[wp2][1], wordpairs[wp2][1], transformed)
+    vavbT = makeouter(X.value, wordpairs.value[wp1][0].value, wordpairs.value[wp1][1].value, transformed.value)
+    vavaTvbvbT = makeouter(X.value, wordpairs.value[wp1][0], wordpairs.value[wp1][0], transformed.value) \
+                 + makeouter(X.value, wordpairs.value[wp1][1], wordpairs.value[wp1][1], transformed.value)
+    vcvdT = makeouter(X.value, wordpairs.value[wp2][0], wordpairs.value[wp2][1], transformed.value)
+    vcvcTvdvdT = makeouter(X.value, wordpairs.value[wp2][0], wordpairs.value[wp2][0], transformed.value) \
+                 + makeouter(X.value, wordpairs.value[wp2][1], wordpairs.value[wp2][1], transformed.value)
     return (coscd - cosab) * (vcvdT - vcvcTvdvdT * coscd - (vavbT - vavaTvbvbT * cosab))
