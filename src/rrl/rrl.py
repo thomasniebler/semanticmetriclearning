@@ -68,7 +68,6 @@ class RRL():
         if self.verbose:
             print('initial loss', self._loss(self.M_))
         # iterations
-        sc = pyspark.SparkContext().getOrCreate()
         for epoch in xrange(1, self.epochs + 1):
             # shuffle constraints
             violations, cosines, _ = self._violations(self.M_)
