@@ -38,7 +38,7 @@ transformedvecs = model.transform()
 if args.outputdir[-1] != "/":
     args.outputdir += "/"
 outputfile = open(
-    args.outputdir + args.inputfile + "_rrl_" + str(args.learningrate) + "_" + str(args.batchsize) + ".txt", "w")
+    args.inputfile + "_rrl_" + str(args.learningrate) + "_" + str(args.batchsize) + ".txt", "w")
 for namevec in transformedvecs.items():
     outputfile.write(namevec[0] + " " + " ".join(map(str, map(lambda x: round(x, 3), namevec[1]))) + "\n")
 
