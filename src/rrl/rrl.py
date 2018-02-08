@@ -76,8 +76,10 @@ class RRL():
                 transformed = np.dot(self.X_, np.linalg.cholesky(self.M_))
                 grad = self.batchgradient(self.M_, constraint_batch, transformed)
                 grad_norm = np.linalg.norm(grad)
-                self.M_ = self.M_ - learning_rate * grad / grad_norm
-                self.M_ = _make_psd(self.M_)
+                M_tmp = self.M_ - learning_rate * grad / grad_norm
+                M_tmp = _make_psd(M_tmp)
+                if self._loss(M_tmp) < self._loss(self.M_):
+                    self.M_ = M_tmp
             if eval_steps:
                 infotext = ("epoch", epoch, "learning rate", learning_rate, "loss", self._loss(self.M_),
                             [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
@@ -89,7 +91,7 @@ class RRL():
                     import pickle
                     pickle.dump(self.M_, open(output_dir + "M_" + str(epoch) + ".pkl", "wb"))
                     pickle.dump(infotext, open(output_dir + "state_" + str(epoch) + ".pkl", "wb"))
-            if abs(oldloss - self._loss(self.M_)) < self.tol:
+            if abs(oldloss - self._loss(self.M_)) < self.tol or oldloss < self._loss(self.M_):
                 break
             oldloss = self._loss(self.M_)
         else:
