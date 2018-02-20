@@ -42,7 +42,7 @@ class RRL():
         return {entry[0]: np.linalg.cholesky(self.M_).T.dot(entry[1]) for entry in self.vectors.items()}
 
     def fit(self, vectors, relscores, learning_rate=0.05, batchsize=50,
-            eval_steps=False, output_dir=None, max_spark_cores=30):
+            eval_steps=False, output_dir=None, max_spark_cores=30, learning_rate_adaption=1):
         """Learn the LSML model.
         Parameters
         ----------
@@ -55,10 +55,14 @@ class RRL():
         learning_rate : 1-dimensional numpy array, default None
                 step sizes for the gradient descent step. If None, np.logspace(-2, 1, 10) is the default value.
         eval_steps : evaluate metric after each epoch on a set of word similarity datasets
-        save_steps : not yet implemented. should save the model (aka the transformation matrix) after each step.
+        learning_rate_adaption : if 0, do not adapt the learning rate. if 1, use the currently set learning rate and
+                decrease it by 50% every time that we cannot reduce the loss. if 2, statically reduce the learning rate
+                every 10 epochs by 50%
         """
         self._prepare_inputs(vectors, relscores)
         oldloss = self._loss(self.M_)
+        Ms = []
+        outputtext = ""
         if self.verbose:
             print('initial loss', oldloss)
         # start a pyspark context
@@ -67,7 +71,7 @@ class RRL():
         # iterations
         for epoch in xrange(1, self.epochs + 1):
             # shuffle constraints
-            if epoch % 10 == 0:
+            if learning_rate_adaption == 2 and epoch % 10 == 0:
                 learning_rate /= 2
             violations, cosines, _ = self._violations(self.M_)
             current_constraints = np.hstack([self.constraints[violations], cosines[violations]])
@@ -85,20 +89,29 @@ class RRL():
                             [(dfname, utils.evaluate(self.prep_eval_dfs[dfname], metric=self.M_)) for dfname in
                        self.prep_eval_dfs])
                 print(infotext)
-                if output_dir:
-                    if output_dir[-1] != "/":
-                        output_dir += "/"
-                    import pickle
-                    pickle.dump(self.M_, open(output_dir + "M_" + str(epoch) + ".pkl", "wb"))
-                    pickle.dump(infotext, open(output_dir + "state_" + str(epoch) + ".pkl", "wb"))
-            if abs(oldloss - self._loss(self.M_)) < self.tol or oldloss < self._loss(self.M_):
+                Ms.append(self.M_)
+                outputtext += infotext + "\n"
+            if abs(oldloss - self._loss(self.M_)) < self.tol:
                 break
+            # if we could not reduce loss,
+            if oldloss <= self._loss(self.M_):
+                if learning_rate_adaption == 1 and learning_rate > 1e-10:
+                    learning_rate /= 2
+                else:
+                    break
+
             oldloss = self._loss(self.M_)
         else:
             print("Didn't converge after", epoch, "iterations. Final loss:", self._loss(self.M_))
         print("Finished after ", epoch, "iterations. Final loss:", self._loss(self.M_))
         # turn off any running spark context
         pyspark.SparkContext.getOrCreate().stop()
+        if output_dir:
+            if output_dir[-1] != "/":
+                output_dir += "/"
+            import pickle
+            pickle.dump(Ms, open(output_dir + "matrices.pkl", "wb"))
+            open(output_dir + "logfile.log", "w").write(outputtext)
         return self
 
     def _violations(self, metric):

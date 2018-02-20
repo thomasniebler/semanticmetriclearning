@@ -12,6 +12,9 @@ parser.add_argument('-r', '--relscores',
                     help="a tab separated csv file with word pairs and numeric relatedness scores, columns"
                                       " headers must be in the first line")
 parser.add_argument('-l', '--learningrate', type=float, help="initial learning rate", default=0.01)
+parser.add_argument('-a', '--learningrateadaption', type=int,
+                    help="learning rate adaption mode 0/1/2: no adaption/adaption only if loss increases/adaption every 10 steps",
+                    default=1)
 parser.add_argument('-b', '--batchsize', type=int, default=100, help="batchsize")
 parser.add_argument('-v', '--verbose', action="store_true", help="more elaborate output")
 parser.add_argument('-o', '--outputdir', help="path where the transformed vectors should be saved to")
@@ -31,14 +34,15 @@ relscores["relatedness"] = relscores["relatedness"].apply(float)
 alg = rrl.RRL(verbose=args.verbose, epochs=args.epochs)
 print(str(datetime.now()) + "\tTraining...")
 model = alg.fit(vectors, relscores, eval_steps=args.evalsteps, learning_rate=args.learningrate,
-                batchsize=args.batchsize, output_dir=args.outputdir, max_spark_cores=args.maxsparkcores)
+                batchsize=args.batchsize, output_dir=args.outputdir, max_spark_cores=args.maxsparkcores,
+                learning_rate_adaption=args.learningrateadaption)
 
 print(str(datetime.now()) + "\tTransforming vectors...")
 transformedvecs = model.transform()
 if args.outputdir[-1] != "/":
     args.outputdir += "/"
 outputfile = open(
-    args.outputdir + "vectors_rrl_" + str(args.learningrate) + "_" + str(args.batchsize) + ".txt", "w")
+    args.inputfile + "_rrl_" + str(args.learningrate) + "_" + str(args.batchsize), "w")
 for namevec in transformedvecs.items():
     outputfile.write(namevec[0] + " " + " ".join(map(str, map(lambda x: round(x, 3), namevec[1]))) + "\n")
 
