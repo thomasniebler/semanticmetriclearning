@@ -91,11 +91,9 @@ class RRL():
                 print(infotext)
                 Ms.append(self.M_)
                 outputtext += str(infotext) + "\n"
-            if abs(oldloss - self._loss(self.M_)) < self.tol:
-                break
             # if we could not reduce loss,
             if oldloss <= self._loss(self.M_):
-                if learning_rate_adaption == 1 and learning_rate > 1e-10:
+                if learning_rate_adaption == 1 and learning_rate > self.tol:
                     learning_rate /= 2
                 else:
                     break

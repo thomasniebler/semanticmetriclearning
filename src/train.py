@@ -16,11 +16,11 @@ parser.add_argument('-a', '--learningrateadaption', type=int,
                     help="learning rate adaption mode 0/1/2: no adaption/adaption only if loss increases/adaption every 10 steps",
                     default=1)
 parser.add_argument('-b', '--batchsize', type=int, default=100, help="batchsize")
-parser.add_argument('-v', '--verbose', action="store_true", default=False, help="more elaborate output")
+parser.add_argument('-v', '--verbose', action="store_true", help="more elaborate output")
 parser.add_argument('-o', '--outputdir', help="path where the transformed vectors should be saved to")
 parser.add_argument('-c', '--maxsparkcores', type=int, default=30,
                     help="maximum number of cores that gradient computation can use")
-parser.add_argument('-e', '--evalsteps', action="store_true", default=True,
+parser.add_argument('-e', '--evalsteps', action="store_true",
                     help="show evaluation scores on a range of datasets after every iteration")
 parser.add_argument('-p', '--epochs', type=int, default=100, help="Number of training epochs")
 args = parser.parse_args()
@@ -39,7 +39,7 @@ model = alg.fit(vectors, relscores, eval_steps=args.evalsteps, learning_rate=arg
 
 print(str(datetime.now()) + "\tTransforming vectors...")
 transformedvecs = model.transform()
-if args.outputdir[-1] != "/":
+if args.outputdir is not None and args.outputdir[-1] != "/":
     args.outputdir += "/"
 outputfile = open(
     args.inputfile + "_rrl_" + str(args.learningrate) + "_" + str(args.batchsize), "w")
