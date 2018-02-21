@@ -90,7 +90,7 @@ class RRL():
                        self.prep_eval_dfs])
                 print(infotext)
                 Ms.append(self.M_)
-                outputtext += infotext + "\n"
+                outputtext += str(infotext) + "\n"
             if abs(oldloss - self._loss(self.M_)) < self.tol:
                 break
             # if we could not reduce loss,
