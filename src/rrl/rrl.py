@@ -1,11 +1,11 @@
-from datetime import datetime
-
 import numpy as np
 import pyspark
-import utils
+from datetime import datetime
 from six.moves import xrange
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
+
+from . import utils
 
 
 class RRL():

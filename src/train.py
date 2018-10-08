@@ -1,7 +1,6 @@
 import argparse
-from datetime import datetime
-
 import pandas
+from datetime import datetime
 
 import rrl
 from rrl import utils
@@ -29,7 +28,7 @@ args = parser.parse_args()
 print(str(datetime.now()) + "\tLoading data...")
 vectors = utils.load_vecs(args.inputfile)
 relscores = pandas.read_csv(args.relscores, header=0, sep="\t")
-relscores.columns = ["termA", "termB", "relatedness"]
+relscores = relscores[["termA", "termB", "relatedness"]]
 relscores["relatedness"] = relscores["relatedness"].apply(float)
 
 alg = rrl.RRL(verbose=args.verbose, epochs=args.epochs)
